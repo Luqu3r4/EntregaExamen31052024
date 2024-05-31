@@ -21,6 +21,7 @@ import javax.swing.JTextArea;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JTextField;
 
 /**
  * Aplicación de ventanas con una única ventana principal y una tabla de datos
@@ -45,9 +46,7 @@ public class VisorWorldBD3 extends JFrame implements ActionListener {
 	/** El modelo de datos de la tabla de países. */
 	private ModeloTablaPaíses modeloPaíses;
 	/** El panel inferior donde se sitúan los botones principales de la pestaña. */
-	private JPanel panelBotones;
-	/** El botón de insertar, abajo a la derecha. */
-	private JButton botónInsertar;
+	private JPanel jpanelDatos;
 
 	/** Control general asociado a la aplicación/ventana. */
 	private ControlWorldBD control;
@@ -60,7 +59,18 @@ public class VisorWorldBD3 extends JFrame implements ActionListener {
 	private JMenu jmenuArchivo;
 	private JMenuItem jitemSalirPrograma;
 	private JMenuItem jitemCreditos;
-
+	private JPanel jpanelTexto;
+	private JTextField jtextoInformacion;
+	private JPanel jpanelInformacion;
+	private JPanel jpanelInsercion;
+	private JTextField jtextPais;
+	private JTextField textField_1;
+	private JPanel jpanelBotones;
+	private JButton jbotonInsertar;
+	private JButton jbotonBuscar;
+	
+	private BaseDeDatos basePaises;
+	private int contador;
 	/**
 	 * Lanza la aplicación. Establece la apariencia general de la ventana y registra
 	 * el lanzador.
@@ -94,6 +104,7 @@ public class VisorWorldBD3 extends JFrame implements ActionListener {
 	 * Crea la aplicación e inicializa los componentes de la ventana.
 	 */
 	public VisorWorldBD3() {
+		basePaises = new BaseDeDatos("jdbc:sqlite:world2.db", contador);
 		ventanaPreparada = false;
 		control = new ControlWorldBD();
 		initialize();
@@ -143,7 +154,7 @@ public class VisorWorldBD3 extends JFrame implements ActionListener {
 			panelPrincipal.setBorder(new EmptyBorder(10, 0, 0, 0));
 			panelPrincipal.setLayout(new BorderLayout(0, 10));
 
-			panelPrincipal.add(getPanelBotones(), BorderLayout.SOUTH);
+			panelPrincipal.add(getJpanelDatos(), BorderLayout.SOUTH);
 			panelPrincipal.add(getPanelTablaDeslizante(), BorderLayout.CENTER);
 		}
 		return panelPrincipal;
@@ -203,47 +214,15 @@ public class VisorWorldBD3 extends JFrame implements ActionListener {
 	 * 
 	 * @return el panel indicado
 	 */
-	private JPanel getPanelBotones() {
-		if (panelBotones == null) {
-			panelBotones = new JPanel();
-			panelBotones.setBorder(new EmptyBorder(0, 0, 0, 0));
-			panelBotones.setLayout(new GridLayout(0, 1, 0, 0));
-			panelBotones.add(getBarraEstado());
-			panelBotones.add(getBotónInsertar());
+	private JPanel getJpanelDatos() {
+		if (jpanelDatos == null) {
+			jpanelDatos = new JPanel();
+			jpanelDatos.setBorder(new EmptyBorder(0, 0, 0, 0));
+			jpanelDatos.setLayout(new BorderLayout(0, 0));
+			jpanelDatos.add(getJpanelTexto(), BorderLayout.NORTH);
+			jpanelDatos.add(getJpanelBotones(), BorderLayout.SOUTH);
 		}
-		return panelBotones;
-	}
-
-	/**
-	 * Localiza –o inicializa si no se ha creado todavía– el botón de insertar,
-	 * abajo a la derecha.
-	 * 
-	 * @return el botón indicado
-	 */
-	private JButton getBotónInsertar() {
-		if (botónInsertar == null) {
-			botónInsertar = new JButton("Insertar");
-			botónInsertar.addActionListener(new BotónInsertarActionListener());
-			botónInsertar.setMnemonic(KeyEvent.VK_I);
-		}
-		return botónInsertar;
-	}
-
-	/**
-	 * Monitor de eventos para el botón de insertar.
-	 */
-	private class BotónInsertarActionListener implements ActionListener {
-		/**
-		 * Carga la tabla con los datos de la base de datos de países.
-		 * 
-		 * @param ev el evento causante
-		 */
-		public void actionPerformed(ActionEvent ev) {
-			ModeloTablaPaíses modelo = getModeloPaíses();
-			control.cargarDatos();
-			control.sincronizarListaPaíses(modelo);
-			mostrarEstado(String.format("Numero de elementos mostrados: %S", control.consultarTamaño()));
-		}
+		return jpanelDatos;
 	}
 	private class JitemCreditosActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
@@ -253,6 +232,28 @@ public class VisorWorldBD3 extends JFrame implements ActionListener {
 	private class JitemSalirProgramaActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			//Aqui iria la opcion para cerrar el programa
+		}
+	}
+	private class JbotonInsertarActionListener implements ActionListener {
+			/**
+			 * Carga la tabla con los datos de la base de datos de países.
+			 * 
+			 * @param ev el evento causante
+			 */
+			public void actionPerformed(ActionEvent ev) {
+				ModeloTablaPaíses modelo = getModeloPaíses();
+				control.cargarDatos();
+				control.sincronizarListaPaíses(modelo);
+				mostrarEstado(String.format("Numero de elementos mostrados: %S", control.consultarTamaño()));
+			}
+	}
+	private class JbotonBuscarActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			basePaises.setNombre(jtextPais.getText());
+			basePaises.ejecutarConsulta();
+			
+			ModeloTablaPaíses modelo = getModeloPaíses();
+			modelo.addRow(basePaises.getPais());
 		}
 	}
 	private JTextArea getBarraEstado() {
@@ -309,5 +310,81 @@ public class VisorWorldBD3 extends JFrame implements ActionListener {
 			jitemCreditos.addActionListener(new JitemCreditosActionListener());
 		}
 		return jitemCreditos;
+	}
+	private JPanel getJpanelTexto() {
+		if (jpanelTexto == null) {
+			jpanelTexto = new JPanel();
+			jpanelTexto.setLayout(new GridLayout(0, 2, 0, 0));
+			jpanelTexto.add(getJpanelInformacion());
+			jpanelTexto.add(getJpanelInsercion());
+		}
+		return jpanelTexto;
+	}
+	private JTextField getJtextoInformacion() {
+		if (jtextoInformacion == null) {
+			jtextoInformacion = new JTextField();
+			jtextoInformacion.setEditable(false);
+			jtextoInformacion.setText("ESTADO:");
+			jtextoInformacion.setColumns(10);
+		}
+		return jtextoInformacion;
+	}
+	private JPanel getJpanelInformacion() {
+		if (jpanelInformacion == null) {
+			jpanelInformacion = new JPanel();
+			jpanelInformacion.setLayout(new BorderLayout(0, 0));
+			jpanelInformacion.add(getJtextoInformacion(), BorderLayout.WEST);
+			jpanelInformacion.add(getBarraEstado(), BorderLayout.CENTER);
+		}
+		return jpanelInformacion;
+	}
+	private JPanel getJpanelInsercion() {
+		if (jpanelInsercion == null) {
+			jpanelInsercion = new JPanel();
+			jpanelInsercion.setLayout(new BorderLayout(0, 0));
+			jpanelInsercion.add(getJtextPais(), BorderLayout.WEST);
+			jpanelInsercion.add(getTextField_1(), BorderLayout.CENTER);
+		}
+		return jpanelInsercion;
+	}
+	private JTextField getJtextPais() {
+		if (jtextPais == null) {
+			jtextPais = new JTextField();
+			jtextPais.setText("País:");
+			jtextPais.setEditable(false);
+			jtextPais.setToolTipText("");
+			jtextPais.setColumns(10);
+		}
+		return jtextPais;
+	}
+	private JTextField getTextField_1() {
+		if (textField_1 == null) {
+			textField_1 = new JTextField();
+			textField_1.setColumns(10);
+		}
+		return textField_1;
+	}
+	private JPanel getJpanelBotones() {
+		if (jpanelBotones == null) {
+			jpanelBotones = new JPanel();
+			jpanelBotones.setLayout(new GridLayout(0, 2, 0, 0));
+			jpanelBotones.add(getJbotonInsertar());
+			jpanelBotones.add(getJbotonBuscar());
+		}
+		return jpanelBotones;
+	}
+	private JButton getJbotonInsertar() {
+		if (jbotonInsertar == null) {
+			jbotonInsertar = new JButton("Insertar");
+			jbotonInsertar.addActionListener(new JbotonInsertarActionListener());
+		}
+		return jbotonInsertar;
+	}
+	private JButton getJbotonBuscar() {
+		if (jbotonBuscar == null) {
+			jbotonBuscar = new JButton("Filtrar país");
+			jbotonBuscar.addActionListener(new JbotonBuscarActionListener());
+		}
+		return jbotonBuscar;
 	}
 }

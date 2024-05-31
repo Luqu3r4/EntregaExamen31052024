@@ -54,6 +54,16 @@ class ModeloTablaPaíses extends DefaultTableModel {
 	}
 
 	/**
+	 * Agrega una nueva fila con los datos de un país.
+	 * 
+	 * @param nuevoPaís el país a incorporar
+	 * @param contador 
+	 */
+	public void addRow(País nuevoPaís, int contador) {
+		addRow(new Object[] { contador, nuevoPaís.nombre(), nuevoPaís.capital(), nuevoPaís.idioma() });
+	}
+	
+	/**
 	 * Vacía, elimina todas las filas de la tabla.
 	 */
 	public void vaciar() {

@@ -55,6 +55,13 @@ public class BaseDeDatos {
 		
 		return pais;
 	}
+	public País getPais(int contador) {
+		País pais;
+		
+		pais = new País(contador,nombre, capital, idioma);
+		
+		return pais;
+	}
 	
 	private void setResultados() {
 		idioma = "";
